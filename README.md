@@ -17,11 +17,33 @@ packed as tightly as the game allows, so every plant still grows.
 - **Fair.** Each plant costs a seed, stamina and Cultivator durability, and gives
   Farming XP, exactly as planting by hand. All of this is configurable.
 
-## Install (one time)
+## Install on Windows
 
-Valheim mods run through **BepInEx**. The scripts below install it and the mod.
-They're written for Linux and get all their tooling from [nix](https://nixos.org)
-(flakes enabled). The game is expected in Steam's default library
+1. Close Valheim.
+2. Download `BulkPlanting-<version>-windows.zip` from the
+   [latest release](https://github.com/neiios/valheim-planting/releases/latest) and extract it.
+3. Double-click **`Install.bat`**. If Windows SmartScreen warns you, click
+   *More info → Run anyway*.
+4. Start Valheim from Steam as usual. No launch options are needed on Windows.
+
+Or paste this into PowerShell, which downloads and runs the same installer:
+
+```powershell
+irm https://raw.githubusercontent.com/neiios/valheim-planting/main/windows/install.ps1 | iex
+```
+
+The installer finds Valheim through Steam (any library folder), installs the
+**BepInEx** mod loader if you don't already have it (pinned version, checksum
+verified), and copies `BulkPlanting.dll` into `Valheim\BepInEx\plugins\BulkPlanting\`.
+If it can't find the game, it asks for the folder. `Uninstall.bat` removes the mod again.
+
+**r2modman / Thunderstore Mod Manager users:** skip the installer and drop
+`BulkPlanting.dll` (also attached to each release) into your profile's `BepInEx\plugins` folder.
+
+## Install on Linux (build from source)
+
+Valheim mods run through **BepInEx**. The scripts below install it and build the mod.
+They get all their tooling from [nix](https://nixos.org) (flakes enabled). The game is expected in Steam's default library
 (`~/.local/share/Steam/steamapps/common/Valheim`); set `VALHEIM_DIR=/path/to/Valheim` otherwise.
 
 ```sh
@@ -47,6 +69,8 @@ as the launch option.
 Then **quit Valheim completely and start it again from Steam**.
 
 ### Check that it loaded
+
+Open `BepInEx/LogOutput.log` in the Valheim folder, or on Linux:
 
 ```sh
 grep -i bulkplanting ~/.local/share/Steam/steamapps/common/Valheim/BepInEx/LogOutput.log
@@ -117,6 +141,7 @@ reading the game's code (`Player.UpdatePlacementGhost`, `Player.TryPlacePiece`,
 
 ## Uninstall
 
+- On Windows, `Uninstall.bat` from the release zip removes the mod.
 - Just this mod: delete `Valheim/BepInEx/plugins/BulkPlanting/`.
 - All modding: also delete `winhttp.dll`, `doorstop_config.ini`, `.doorstop_version`, `doorstop_libs/`,
   `changelog.txt`, `start_game_bepinex.sh`, `start_server_bepinex.sh` and `BepInEx/` from
@@ -132,9 +157,21 @@ BulkPlanting/src/Plugin.cs        BepInEx entry point, config, key handling
 BulkPlanting/src/BulkPlanter.cs   grid layout, growth validation, previews, placement
 BulkPlanting/src/Patches.cs       Harmony hooks into Player placement
 BulkPlanting/src/StatusPanel.cs   on-screen status panel
-scripts/install-bepinex.sh   installs the mod loader into the game folder
-scripts/deploy.sh            build + copy the plugin into BepInEx/plugins
+scripts/install-bepinex.sh   installs the mod loader into the game folder (Linux)
+scripts/deploy.sh            build + copy the plugin into BepInEx/plugins (Linux)
+scripts/package.sh           build the release files into dist/
+windows/install.ps1          Windows installer (Install.bat / Uninstall.bat wrap it)
 ```
+
+### Making a release
+
+```sh
+nix develop -c ./scripts/package.sh
+gh release create vX.Y.Z dist/*
+```
+
+Bump `<Version>` in the csproj and `Version` in `Plugin.cs` first. The Windows
+installer always fetches the DLL from the latest release.
 
 The game assemblies are referenced from your Valheim install, with private members
 publicized at build time, so nothing from the game is copied into this repo.

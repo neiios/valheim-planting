@@ -14,6 +14,7 @@
           ilspycmd # handy for reading the game's code when Valheim updates
           curl
           unzip
+          zip
         ];
         DOTNET_CLI_TELEMETRY_OPTOUT = "1";
         DOTNET_NOLOGO = "1";
